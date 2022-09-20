@@ -1,6 +1,8 @@
+import json
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import List
+from pathlib import Path
+from typing import List, Union
 
 from graphviz import Digraph
 
@@ -11,6 +13,10 @@ COLORS = {
     "intermediate": "#d7af70",
     "marts": "#5F0A87",
 }
+
+
+def read_manifest(manifest_filepath: Union[str, Path]):
+    return json.loads(Path(manifest_filepath).read_text())
 
 
 def get_base_graph(title: str = "Data Model\n\n") -> Digraph:
@@ -87,6 +93,11 @@ class Graph:
                     edges.append((parent.replace(".", "_"), node.unique_id))
 
         return cls(nodes=clusters, edges=edges)
+
+    @classmethod
+    def from_manifest_file(cls, manifest_filepath: Union[str, Path]):
+        manifest = read_manifest(manifest_filepath)
+        return cls.from_manifest(manifest)
 
     def to_dot(self):
 
