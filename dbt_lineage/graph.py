@@ -1,4 +1,6 @@
 import json
+import tempfile
+import webbrowser
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -132,3 +134,11 @@ class Graph:
             G.edge(parent, child)
 
         return G
+
+    def export_svg(self, filepath: Union[str, Path] = "graph"):
+        G = self.to_dot()
+        return G.render(filepath, format="svg")
+
+    def preview(self):
+        filepath = self.export_svg(Path(tempfile.mktemp("graph.svg")))
+        webbrowser.open(f"file://{filepath}")
