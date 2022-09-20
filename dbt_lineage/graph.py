@@ -17,35 +17,6 @@ COLORS = {
 }
 
 
-def read_manifest(manifest_filepath: Union[str, Path]):
-    return json.loads(Path(manifest_filepath).read_text())
-
-
-def get_base_graph(title: str = "Data Model\n\n") -> Digraph:
-    G = Digraph(
-        graph_attr=dict(
-            label=title,
-            labelloc="t",
-            fontname="Courier New",
-            fontsize="20",
-            layout="dot",
-            rankdir="LR",
-            newrank="true",
-        ),
-        node_attr=dict(
-            style="rounded, filled",
-            shape="rect",
-            fontname="Courier New",
-        ),
-        edge_attr=dict(
-            arrowsize="1",
-            penwidth="2",
-        ),
-    )
-
-    return G
-
-
 @dataclass
 class Node:
     unique_id: str
@@ -98,12 +69,30 @@ class Graph:
 
     @classmethod
     def from_manifest_file(cls, manifest_filepath: Union[str, Path]):
-        manifest = read_manifest(manifest_filepath)
+        manifest = json.loads(Path(manifest_filepath).read_text())
         return cls.from_manifest(manifest)
 
-    def to_dot(self):
-
-        G = get_base_graph()
+    def to_dot(self, title: str = "Data Model\n\n") -> Digraph:
+        G = Digraph(
+            graph_attr=dict(
+                label=title,
+                labelloc="t",
+                fontname="Courier New",
+                fontsize="20",
+                layout="dot",
+                rankdir="LR",
+                newrank="true",
+            ),
+            node_attr=dict(
+                style="rounded, filled",
+                shape="rect",
+                fontname="Courier New",
+            ),
+            edge_attr=dict(
+                arrowsize="1",
+                penwidth="2",
+            ),
+        )
 
         for cluster, nodes in self.nodes.items():
             with G.subgraph(
