@@ -1,13 +1,41 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import List
+
+from graphviz import Digraph
 
 COLORS = {
+    "komet_sales_backend": "#E76B74",
     "source": "#E76B74",
     "staging": "#2bb59a",
     "intermediate": "#d7af70",
     "marts": "#5F0A87",
 }
+
+
+def get_base_graph(title: str = "Data Model\n\n") -> Digraph:
+    G = Digraph(
+        graph_attr=dict(
+            label=title,
+            labelloc="t",
+            fontname="Courier New",
+            fontsize="20",
+            layout="dot",
+            rankdir="LR",
+            newrank="true",
+        ),
+        node_attr=dict(
+            style="rounded, filled",
+            shape="rect",
+            fontname="Courier New",
+        ),
+        edge_attr=dict(
+            arrowsize="1",
+            penwidth="2",
+        ),
+    )
+
+    return G
 
 
 @dataclass
@@ -41,12 +69,55 @@ class Node:
         return f"Node(cluster={self.cluster!r}, name={self.name!r}, resource_type={self.resource_type!r})"
 
 
-def get_cluster(manifest: str) -> Dict[str, List[Node]]:
+@dataclass
+class Graph:
+    nodes: defaultdict(list)
+    edges: List[tuple]
 
-    clusters = defaultdict(list)
-    for _, node_json in {**manifest["nodes"], **manifest["sources"]}.items():
-        if node_json["resource_type"] in ("model", "source"):
-            node = Node.from_manifest(node_json)
-            clusters[node.cluster].append(node)
+    @classmethod
+    def from_manifest(cls, manifest):
 
-    return clusters
+        clusters = defaultdict(list)
+        edges = []
+        for _, node in {**manifest["nodes"], **manifest["sources"]}.items():
+            if node["resource_type"] in ("model", "source"):
+                node = Node.from_manifest(node)
+                clusters[node.cluster].append(node)
+                for parent in node.depends_on:
+                    edges.append((parent.replace(".", "_"), node.unique_id))
+
+        return cls(nodes=clusters, edges=edges)
+
+    def to_dot(self):
+
+        G = get_base_graph()
+
+        for cluster, nodes in self.nodes.items():
+            with G.subgraph(
+                name=f"cluster_{cluster}"
+                if cluster not in ("intermediate", "marts")
+                else cluster,
+                graph_attr=dict(
+                    label=cluster,
+                    style="rounded",
+                ),
+                node_attr=dict(
+                    color=COLORS[cluster],
+                    fillcolor=COLORS[cluster],
+                    fontcolor="white",
+                ),
+            ) as C:
+                C.attr(
+                    rank="same" if cluster not in ("intermediate", "marts") else None
+                )
+                for node in nodes:
+                    C.node(
+                        node.unique_id,
+                        node.name,
+                        tooltip=node.compiled_sql or "",
+                    )
+
+        for parent, child in self.edges:
+            G.edge(parent, child)
+
+        return G
