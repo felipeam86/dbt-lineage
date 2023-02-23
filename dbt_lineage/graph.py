@@ -31,7 +31,7 @@ class Node:
             description=node["description"],
             resource_type=node["resource_type"],
             fqn=node["fqn"],
-            cluster=node["fqn"][1],
+            cluster="seed" if node["resource_type"] == "seed" else node["fqn"][1],
             raw_sql=node.get("raw_sql"),
             compiled_sql=node.get("compiled_sql"),
             depends_on=node.get("depends_on", dict()).get("nodes", []),
@@ -60,7 +60,7 @@ class Graph:
         clusters = defaultdict(list)
         edges = []
         for _, node in {**manifest["nodes"], **manifest["sources"]}.items():
-            if node["resource_type"] in ("model", "source"):
+            if node["resource_type"] in ("model", "source", "seed"):
                 node = Node.from_manifest(node)
                 clusters[node.cluster].append(node)
                 for parent in node.depends_on:
