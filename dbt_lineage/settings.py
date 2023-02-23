@@ -26,6 +26,7 @@ class Palette(Enum):
 @dataclass
 class Config:
     title: str
+    tooltip: str
     palette: Palette
     fontcolor: str
     subgraph_clusters: List

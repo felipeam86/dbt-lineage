@@ -119,7 +119,7 @@ class Graph:
                     C.node(
                         node.unique_id,
                         node.name,
-                        tooltip=node.compiled_sql or "",
+                        tooltip=getattr(node, config.tooltip) or "",
                         shape=shapes.get(node.resource_type, "box"),
                     )
 

@@ -1,4 +1,5 @@
 title: Data Model
+tooltip: description
 shapes:
   source: cds
   seed: component
