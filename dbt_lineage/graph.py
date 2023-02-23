@@ -10,6 +10,12 @@ from graphviz import Digraph
 
 from . import palettes
 
+DEFAULT_SHAPES = {
+    "source": "cds",
+    "seed": "component",
+    "model": "box",
+}
+
 
 @dataclass
 class Node:
@@ -75,7 +81,7 @@ class Graph:
         subgraph_clusters: List = None,
     ) -> Digraph:
 
-        shapes = shapes or dict()
+        shapes = shapes or DEFAULT_SHAPES
         cluster_colors = dict(zip(self.nodes.keys(), palette))
         subgraph_clusters = subgraph_clusters or []
 
