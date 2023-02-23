@@ -9,12 +9,7 @@ from typing import List, Mapping, Union
 from graphviz import Digraph
 
 from . import palettes
-
-DEFAULT_SHAPES = {
-    "source": "cds",
-    "seed": "component",
-    "model": "box",
-}
+from .settings import config
 
 
 @dataclass
@@ -74,16 +69,16 @@ class Graph:
 
     def to_dot(
         self,
-        title: str = "Data Model\n\n",
+        title: str = config.title,
         shapes: Mapping[str, str] = None,
-        palette: List[str] = palettes.Pastel,
-        fontcolor: str = "black",
+        palette: List[str] = getattr(palettes, config.palette.name),
+        fontcolor: str = config.fontcolor,
         subgraph_clusters: List = None,
     ) -> Digraph:
 
-        shapes = shapes or DEFAULT_SHAPES
+        shapes = shapes or config.shapes
         cluster_colors = dict(zip(self.nodes.keys(), palette))
-        subgraph_clusters = subgraph_clusters or []
+        subgraph_clusters = subgraph_clusters or config.subgraph_clusters
 
         G = Digraph(
             graph_attr=dict(
@@ -119,9 +114,7 @@ class Graph:
                     fontcolor=fontcolor,
                 ),
             ) as C:
-                C.attr(
-                    rank="same" if cluster not in ("intermediate", "marts") else None
-                )
+                C.attr(rank="same" if cluster in subgraph_clusters else None)
                 for node in nodes:
                     C.node(
                         node.unique_id,
