@@ -4,7 +4,7 @@ import webbrowser
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Mapping, Union
+from typing import Dict, List, Mapping, Union
 
 from graphviz import Digraph
 
@@ -45,22 +45,25 @@ class Node:
 
 @dataclass
 class Graph:
-    nodes: defaultdict(list)
+    clusters: defaultdict(list)
+    nodes: Dict[str, Node]
     edges: List[tuple]
 
     @classmethod
     def from_manifest(cls, manifest):
 
         clusters = defaultdict(list)
+        nodes = {}
         edges = []
-        for _, node in {**manifest["nodes"], **manifest["sources"]}.items():
-            if node["resource_type"] in ("model", "source", "seed"):
-                node = Node.from_manifest(node)
-                clusters[node.cluster].append(node)
+        for _, node_json in {**manifest["nodes"], **manifest["sources"]}.items():
+            if node_json["resource_type"] in ("model", "source", "seed"):
+                node = Node.from_manifest(node_json)
+                nodes[node.unique_id] = node
+                clusters[node.cluster].append(node.unique_id)
                 for parent in node.depends_on:
                     edges.append((parent, node.unique_id))
 
-        return cls(nodes=clusters, edges=edges)
+        return cls(clusters=clusters, nodes=nodes, edges=edges)
 
     @classmethod
     def from_manifest_file(cls, manifest_filepath: Union[str, Path]):
@@ -77,7 +80,7 @@ class Graph:
     ) -> Digraph:
 
         shapes = shapes or config.shapes
-        cluster_colors = dict(zip(self.nodes.keys(), palette))
+        cluster_colors = dict(zip(self.clusters.keys(), palette))
         subgraph_clusters = subgraph_clusters or config.subgraph_clusters
 
         G = Digraph(
@@ -101,7 +104,7 @@ class Graph:
             ),
         )
 
-        for cluster, nodes in self.nodes.items():
+        for cluster, node_ids in self.clusters.items():
             with G.subgraph(
                 name=f"cluster_{cluster}" if cluster in subgraph_clusters else cluster,
                 graph_attr=dict(
@@ -115,7 +118,8 @@ class Graph:
                 ),
             ) as C:
                 C.attr(rank="same" if cluster in subgraph_clusters else None)
-                for node in nodes:
+                for node_id in node_ids:
+                    node = self.nodes[node_id]
                     C.node(
                         node.unique_id.replace(".", "_"),
                         node.name,
