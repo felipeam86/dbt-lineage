@@ -83,7 +83,12 @@ class Graph:
         manifest = json.loads(Path(manifest_filepath).read_text())
         return cls.from_manifest(manifest, palette=palette, fontcolor=fontcolor)
 
-    def to_dot(self, title: str = "Data Model\n\n") -> Digraph:
+    def to_dot(
+        self,
+        title: str = "Data Model\n\n",
+        shapes: Mapping[str, str] = None,
+    ) -> Digraph:
+        shapes = shapes or dict()
         G = Digraph(
             graph_attr=dict(
                 label=title,
@@ -128,6 +133,7 @@ class Graph:
                         node.unique_id,
                         node.name,
                         tooltip=node.compiled_sql or "",
+                        shape=shapes.get(node.resource_type, "box"),
                     )
 
         for parent, child in self.edges:
