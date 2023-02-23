@@ -72,10 +72,12 @@ class Graph:
         shapes: Mapping[str, str] = None,
         palette: List[str] = palettes.Pastel,
         fontcolor: str = "black",
+        subgraph_clusters: List = None,
     ) -> Digraph:
 
         shapes = shapes or dict()
         cluster_colors = dict(zip(self.nodes.keys(), palette))
+        subgraph_clusters = subgraph_clusters or []
 
         G = Digraph(
             graph_attr=dict(
@@ -100,9 +102,7 @@ class Graph:
 
         for cluster, nodes in self.nodes.items():
             with G.subgraph(
-                name=f"cluster_{cluster}"
-                if cluster not in ("intermediate", "marts")
-                else cluster,
+                name=f"cluster_{cluster}" if cluster in subgraph_clusters else cluster,
                 graph_attr=dict(
                     label=cluster,
                     style="rounded",
