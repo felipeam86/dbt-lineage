@@ -46,16 +46,9 @@ class Node:
 class Graph:
     nodes: defaultdict(list)
     edges: List[tuple]
-    cluster_colors: Mapping[str, str]
-    fontcolor: str = "black"
 
     @classmethod
-    def from_manifest(
-        cls,
-        manifest,
-        palette=palettes.Pastel,
-        fontcolor=None,
-    ):
+    def from_manifest(cls, manifest):
 
         clusters = defaultdict(list)
         edges = []
@@ -66,29 +59,24 @@ class Graph:
                 for parent in node.depends_on:
                     edges.append((parent.replace(".", "_"), node.unique_id))
 
-        return cls(
-            nodes=clusters,
-            edges=edges,
-            cluster_colors=dict(zip(clusters, palette)),
-            fontcolor=fontcolor,
-        )
+        return cls(nodes=clusters, edges=edges)
 
     @classmethod
-    def from_manifest_file(
-        cls,
-        manifest_filepath: Union[str, Path],
-        palette: List[str] = palettes.Pastel,
-        fontcolor: str = None,
-    ):
+    def from_manifest_file(cls, manifest_filepath: Union[str, Path]):
         manifest = json.loads(Path(manifest_filepath).read_text())
-        return cls.from_manifest(manifest, palette=palette, fontcolor=fontcolor)
+        return cls.from_manifest(manifest)
 
     def to_dot(
         self,
         title: str = "Data Model\n\n",
         shapes: Mapping[str, str] = None,
+        palette: List[str] = palettes.Pastel,
+        fontcolor: str = "black",
     ) -> Digraph:
+
         shapes = shapes or dict()
+        cluster_colors = dict(zip(self.nodes.keys(), palette))
+
         G = Digraph(
             graph_attr=dict(
                 label=title,
@@ -120,9 +108,9 @@ class Graph:
                     style="rounded",
                 ),
                 node_attr=dict(
-                    color=self.cluster_colors[cluster],
-                    fillcolor=self.cluster_colors[cluster],
-                    fontcolor=self.fontcolor,
+                    color=cluster_colors[cluster],
+                    fillcolor=cluster_colors[cluster],
+                    fontcolor=fontcolor,
                 ),
             ) as C:
                 C.attr(
