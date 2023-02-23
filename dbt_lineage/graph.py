@@ -27,7 +27,7 @@ class Node:
     @classmethod
     def from_manifest(cls, node):
         return cls(
-            unique_id=node["unique_id"].replace(".", "_"),
+            unique_id=node["unique_id"],
             name=node["name"],
             description=node["description"],
             resource_type=node["resource_type"],
@@ -58,7 +58,7 @@ class Graph:
                 node = Node.from_manifest(node)
                 clusters[node.cluster].append(node)
                 for parent in node.depends_on:
-                    edges.append((parent.replace(".", "_"), node.unique_id))
+                    edges.append((parent, node.unique_id))
 
         return cls(nodes=clusters, edges=edges)
 
@@ -117,14 +117,14 @@ class Graph:
                 C.attr(rank="same" if cluster in subgraph_clusters else None)
                 for node in nodes:
                     C.node(
-                        node.unique_id,
+                        node.unique_id.replace(".", "_"),
                         node.name,
                         tooltip=getattr(node, config.tooltip) or "",
                         shape=shapes.get(node.resource_type, "box"),
                     )
 
         for parent, child in self.edges:
-            G.edge(parent, child)
+            G.edge(parent.replace(".", "_"), child.replace(".", "_"))
 
         return G
 
