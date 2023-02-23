@@ -4,17 +4,11 @@ import webbrowser
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Union
+from typing import List, Mapping, Union
 
 from graphviz import Digraph
 
-COLORS = {
-    "komet_sales_backend": "#E76B74",
-    "source": "#E76B74",
-    "staging": "#2bb59a",
-    "intermediate": "#d7af70",
-    "marts": "#5F0A87",
-}
+from . import palettes
 
 
 @dataclass
@@ -52,9 +46,16 @@ class Node:
 class Graph:
     nodes: defaultdict(list)
     edges: List[tuple]
+    cluster_colors: Mapping[str, str]
+    fontcolor: str = "black"
 
     @classmethod
-    def from_manifest(cls, manifest):
+    def from_manifest(
+        cls,
+        manifest,
+        palette=palettes.Pastel,
+        fontcolor=None,
+    ):
 
         clusters = defaultdict(list)
         edges = []
@@ -65,12 +66,22 @@ class Graph:
                 for parent in node.depends_on:
                     edges.append((parent.replace(".", "_"), node.unique_id))
 
-        return cls(nodes=clusters, edges=edges)
+        return cls(
+            nodes=clusters,
+            edges=edges,
+            cluster_colors=dict(zip(clusters, palette)),
+            fontcolor=fontcolor,
+        )
 
     @classmethod
-    def from_manifest_file(cls, manifest_filepath: Union[str, Path]):
+    def from_manifest_file(
+        cls,
+        manifest_filepath: Union[str, Path],
+        palette: List[str] = palettes.Pastel,
+        fontcolor: str = None,
+    ):
         manifest = json.loads(Path(manifest_filepath).read_text())
-        return cls.from_manifest(manifest)
+        return cls.from_manifest(manifest, palette=palette, fontcolor=fontcolor)
 
     def to_dot(self, title: str = "Data Model\n\n") -> Digraph:
         G = Digraph(
@@ -104,9 +115,9 @@ class Graph:
                     style="rounded",
                 ),
                 node_attr=dict(
-                    color=COLORS[cluster],
-                    fillcolor=COLORS[cluster],
-                    fontcolor="white",
+                    color=self.cluster_colors[cluster],
+                    fillcolor=self.cluster_colors[cluster],
+                    fontcolor=self.fontcolor,
                 ),
             ) as C:
                 C.attr(
