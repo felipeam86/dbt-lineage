@@ -48,6 +48,7 @@ class Graph:
     clusters: defaultdict(list)
     nodes: Dict[str, Node]
     edges: List[tuple]
+    manifest: Dict
 
     @classmethod
     def from_manifest(cls, manifest):
@@ -63,12 +64,63 @@ class Graph:
                 for parent in node.depends_on:
                     edges.append((parent, node.unique_id))
 
-        return cls(clusters=clusters, nodes=nodes, edges=edges)
+        return cls(clusters=clusters, nodes=nodes, edges=edges, manifest=manifest)
 
     @classmethod
     def from_manifest_file(cls, manifest_filepath: Union[str, Path]):
         manifest = json.loads(Path(manifest_filepath).read_text())
         return cls.from_manifest(manifest)
+
+    def get_node_from_name(self, node_name):
+        for _, node in self.nodes.items():
+            if node.name == node_name:
+                return node
+
+    def get_node_parents(self, node_name):
+        node = self.get_node_from_name(node_name=node_name)
+        selected_nodes = trace_connections(
+            connection_map=self.manifest["parent_map"],
+            unique_id=node.unique_id,
+        )
+
+        return selected_nodes
+
+    def get_node_childs(self, node_name):
+        node = self.get_node_from_name(node_name=node_name)
+        selected_nodes = trace_connections(
+            connection_map=self.manifest["child_map"],
+            unique_id=node.unique_id,
+        )
+
+        return self.nodes.keys() & selected_nodes
+
+    def subgraph(self, selected_nodes):
+        new_clusters = {}
+        for cluster, node_ids in self.clusters.items():
+            new_node_ids = list(set(node_ids) & selected_nodes)
+            if len(new_node_ids) > 0:
+                new_clusters[cluster] = new_node_ids
+        new_nodes = {unique_id: self.nodes[unique_id] for unique_id in selected_nodes}
+        new_edges = [
+            edge for edge in self.edges if len(set(edge) & selected_nodes) == 2
+        ]
+        return Graph(
+            clusters=new_clusters,
+            nodes=new_nodes,
+            edges=new_edges,
+            manifest=self.manifest,
+        )
+
+    def select(self, select: str):
+        if select is not None:
+            selected_nodes = set()
+            node_name = select.replace("+", "")
+            if (select[0] == "+") or ("+" not in select):
+                selected_nodes = selected_nodes.union(self.get_node_parents(node_name))
+            if select[-1] == "+":
+                selected_nodes = selected_nodes.union(self.get_node_childs(node_name))
+
+        return self.subgraph(selected_nodes)
 
     def to_dot(
         self,
@@ -139,3 +191,19 @@ class Graph:
     def preview(self):
         filepath = self.export_svg(Path(tempfile.mktemp("graph.svg")))
         webbrowser.open(f"file://{filepath}")
+
+
+def trace_connections(connection_map, unique_id, selected=None):
+    selected = selected or {unique_id}
+    connections = connection_map[unique_id]
+    if len(connections) == 0:
+        return selected
+    else:
+        selected = selected.union(connections)
+        for parent_unique_id in connections:
+            selected = trace_connections(
+                connection_map=connection_map,
+                unique_id=parent_unique_id,
+                selected=selected,
+            )
+    return selected
