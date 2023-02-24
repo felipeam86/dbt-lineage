@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dbt_lineage"
-version = "0.0.1"
+version = "0.0.2"
 description = ""
 authors = ["Felipe Aguirre Martinez <felipea@kometsales.com>"]
 
