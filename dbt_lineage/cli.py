@@ -3,7 +3,7 @@ import shutil
 import typer
 
 from .graph import Graph
-from .settings import DEFAULT_CONFIG_FILE, USER_CONFIG_FILE
+from .settings import DEFAULT_CONFIG_FILE, USER_CONFIG_FILE, config
 
 app = typer.Typer()
 
@@ -12,6 +12,7 @@ def get_graph(manifest: str = "target/manifest.json", select: str = None):
     G = Graph.from_manifest_file(manifest)
     if select is not None:
         G = G.select(select)
+        config.title += f" --select '{select}'"
     return G
 
 

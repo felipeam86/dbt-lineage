@@ -124,14 +124,17 @@ class Graph:
 
     def to_dot(
         self,
-        title: str = config.title,
+        title: str = None,
         shapes: Mapping[str, str] = None,
-        palette: List[str] = getattr(palettes, config.palette.name),
-        fontcolor: str = config.fontcolor,
+        palette: List[str] = None,
+        fontcolor: str = None,
         subgraph_clusters: List = None,
     ) -> Digraph:
 
+        title = title or config.title
         shapes = shapes or config.shapes
+        palette = palette or getattr(palettes, config.palette.name)
+        fontcolor = fontcolor or config.fontcolor
         cluster_colors = dict(zip(self.clusters.keys(), palette))
         subgraph_clusters = subgraph_clusters or config.subgraph_clusters
 
