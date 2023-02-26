@@ -2,7 +2,7 @@ import json
 import tempfile
 import webbrowser
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Mapping, Union
 
@@ -48,7 +48,7 @@ class Graph:
     clusters: defaultdict(list)
     nodes: Dict[str, Node]
     edges: List[tuple]
-    manifest: Dict
+    manifest: Dict = field(repr=False)
 
     @classmethod
     def from_manifest(cls, manifest):
