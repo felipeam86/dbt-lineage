@@ -26,7 +26,7 @@ class Palette(Enum):
 @dataclass
 class Cluster:
     subgraph: bool
-    rank: bool
+    samerank: bool
 
 
 @dataclass

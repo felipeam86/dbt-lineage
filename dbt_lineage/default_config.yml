@@ -9,10 +9,10 @@ fontcolor: black
 clusters:
   staging:
     subgraph: true
-    rank: true
+    samerank: true
   seed:
     subgraph: false
-    rank: false
+    samerank: false
   root:
     subgraph: false
-    rank: false
+    samerank: false

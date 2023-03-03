@@ -181,7 +181,7 @@ class Graph:
                     fontcolor=fontcolor,
                 ),
             ) as C:
-                C.attr(rank="same" if cluster_config.get("rank", False) else None)
+                C.attr(rank="same" if cluster_config.get("samerank", False) else None)
                 for node_id in node_ids:
                     node = self.nodes[node_id]
                     C.node(
