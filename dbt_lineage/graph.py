@@ -26,13 +26,19 @@ class Node:
 
     @classmethod
     def from_manifest(cls, node):
+        if node["resource_type"] == "seed":
+            cluster = "seed"
+        elif len(node["fqn"]) == 2:
+            cluster = "root"
+        else:
+            cluster = node["fqn"][1]
         return cls(
             unique_id=node["unique_id"],
             name=node["name"],
             description=node["description"],
             resource_type=node["resource_type"],
             fqn=node["fqn"],
-            cluster="seed" if node["resource_type"] == "seed" else node["fqn"][1],
+            cluster=cluster,
             raw_sql=node.get("raw_sql"),
             compiled_sql=node.get("compiled_sql"),
             depends_on=node.get("depends_on", dict()).get("nodes", []),
