@@ -6,6 +6,13 @@ shapes:
   model: box
 palette: Pastel
 fontcolor: black
-subgraph_clusters:
-  - staging
-  - seed
+clusters:
+  staging:
+    subgraph: true
+    rank: true
+  seed:
+    subgraph: false
+    rank: false
+  root:
+    subgraph: false
+    rank: false

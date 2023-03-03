@@ -24,12 +24,18 @@ class Palette(Enum):
 
 
 @dataclass
+class Cluster:
+    subgraph: bool
+    rank: bool
+
+
+@dataclass
 class Config:
     title: str
     tooltip: str
     palette: Palette
     fontcolor: str
-    subgraph_clusters: List
+    clusters: Dict[str, Cluster]
     shapes: Dict[str, str]
 
 

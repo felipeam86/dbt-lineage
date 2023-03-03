@@ -128,7 +128,7 @@ class Graph:
         shapes: Mapping[str, str] = None,
         palette: List[str] = None,
         fontcolor: str = None,
-        subgraph_clusters: List = None,
+        clusters_config: Dict = None,
     ) -> Digraph:
 
         title = title or config.title
@@ -136,7 +136,7 @@ class Graph:
         palette = palette or getattr(palettes, config.palette.name)
         fontcolor = fontcolor or config.fontcolor
         cluster_colors = dict(zip(self.clusters.keys(), palette))
-        subgraph_clusters = subgraph_clusters or config.subgraph_clusters
+        clusters_config = clusters_config or config.clusters
 
         G = Digraph(
             graph_attr=dict(
@@ -160,8 +160,11 @@ class Graph:
         )
 
         for cluster, node_ids in self.clusters.items():
+            cluster_config = clusters_config.get(cluster, {})
             with G.subgraph(
-                name=f"cluster_{cluster}" if cluster in subgraph_clusters else cluster,
+                name=f"cluster_{cluster}"
+                if cluster_config.get("subgraph", False)
+                else cluster,
                 graph_attr=dict(
                     label=cluster,
                     style="rounded",
@@ -172,7 +175,7 @@ class Graph:
                     fontcolor=fontcolor,
                 ),
             ) as C:
-                C.attr(rank="same" if cluster in subgraph_clusters else None)
+                C.attr(rank="same" if cluster_config.get("rank", False) else None)
                 for node_id in node_ids:
                     node = self.nodes[node_id]
                     C.node(
